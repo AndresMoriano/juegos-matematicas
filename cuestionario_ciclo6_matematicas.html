@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expedición del Río — Matemáticas Ciclo VI | Instituto Nueva Colombia</title>
+<style>
+  :root{
+    --selva:#123528; --selva-2:#1f4d3a; --hoja:#4f9d69; --hoja-clara:#8fc99a;
+    --rio:#2c7da0; --rio-claro:#a9d6e5; --sol:#e8a33d; --sol-fuerte:#c9821f;
+    --arena:#f6f0df; --tierra:#5b3a29; --achiote:#b6472f; --blanco:#fffdf7;
+    --sombra: 0 8px 24px rgba(18,53,40,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background: radial-gradient(circle at 15% 8%, rgba(143,201,154,.35), transparent 45%),
+      radial-gradient(circle at 90% 85%, rgba(44,125,160,.25), transparent 50%), var(--arena);
+    font-family: "Segoe UI", "Trebuchet MS", system-ui, -apple-system, sans-serif;
+    color:var(--tierra); display:flex; justify-content:center; padding:18px 12px 40px;
+  }
+  .app{ width:100%; max-width:760px; }
+  .cabecera{
+    background: linear-gradient(135deg, var(--selva) 0%, var(--selva-2) 100%);
+    color:var(--blanco); border-radius:18px; padding:16px 18px; box-shadow:var(--sombra);
+    position:relative; overflow:hidden;
+  }
+  .cabecera::after{ content:""; position:absolute; right:-30px; top:-30px; width:140px; height:140px;
+    border-radius:50%; background:radial-gradient(circle, rgba(232,163,61,.35), transparent 70%); }
+  .fila-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .marca{ font-size:12px; letter-spacing:.09em; text-transform:uppercase; opacity:.8; }
+  .titulo{ font-family: Georgia, "Palatino Linotype", serif; font-size: 24px; margin:2px 0 0; letter-spacing:.02em; }
+  .subtitulo{ font-size:13px; opacity:.85; margin-top:2px;}
+  .placar{ text-align:right; font-size:13px; }
+  .placar b{ font-size:20px; display:block; color:var(--sol); font-family:Georgia,serif; }
+  .racha{ font-size:12px; opacity:.9; }
+  .rio-wrap{ margin-top:14px; }
+  .rio-svg{ width:100%; height:74px; display:block; }
+  .estaciones-labels{ display:flex; justify-content:space-between; margin-top:2px; font-size:10.5px; color:var(--rio-claro); opacity:.95; }
+  .estaciones-labels span{ width:20%; text-align:center; }
+  .estaciones-labels span.activa{ color:var(--sol); font-weight:700; }
+  .tarjeta{ background:var(--blanco); border-radius:18px; margin-top:16px; padding:22px 20px 20px;
+    box-shadow:var(--sombra); border:1px solid #e8dfc7; }
+  .estacion-tag{ display:inline-flex; align-items:center; gap:6px; background:var(--hoja-clara); color:var(--selva);
+    font-size:12px; font-weight:700; letter-spacing:.03em; padding:5px 12px; border-radius:999px; margin-bottom:14px; }
+  .pregunta{ font-family: Georgia, "Palatino Linotype", serif; font-size:19px; line-height:1.4; color:var(--selva); margin:0 0 18px; }
+  .opciones{ display:grid; gap:10px; }
+  .opcion{ text-align:left; background:var(--arena); border:2px solid #e6dcc3; border-radius:12px; padding:13px 15px;
+    font-size:15.5px; color:var(--tierra); cursor:pointer;
+    transition: transform .12s ease, border-color .15s ease, background .15s ease; display:flex; align-items:center; gap:10px; }
+  .opcion .letra{ flex:0 0 26px; height:26px; border-radius:7px; background:var(--selva); color:var(--blanco);
+    font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+  .opcion:hover:not(:disabled){ border-color:var(--rio); transform:translateY(-1px); }
+  .opcion:focus-visible{ outline:3px solid var(--rio); outline-offset:2px; }
+  .opcion.correcta{ background:#e4f3e6; border-color:var(--hoja); }
+  .opcion.correcta .letra{ background:var(--hoja); }
+  .opcion.incorrecta{ background:#fbe7e2; border-color:var(--achiote); }
+  .opcion.incorrecta .letra{ background:var(--achiote); }
+  .opcion:disabled{ cursor:default; }
+  .retro{ margin-top:16px; padding:14px 16px; border-radius:12px; font-size:14.5px; line-height:1.5; display:none; }
+  .retro.bien{ background:#e4f3e6; border:1px solid var(--hoja); color:var(--selva-2); display:block; }
+  .retro.mal{ background:#fbe7e2; border:1px solid var(--achiote); color:#7a2c1c; display:block; }
+  .retro strong{ display:block; margin-bottom:4px; font-size:15px; }
+  .acciones{ margin-top:18px; display:flex; justify-content:flex-end; }
+  .btn{ border:none; border-radius:11px; padding:12px 20px; font-size:14.5px; font-weight:700; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; transition: transform .12s ease, box-shadow .12s ease; }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn:focus-visible{ outline:3px solid var(--rio); outline-offset:2px; }
+  .btn-sol{ background:var(--sol); color:var(--selva); }
+  .btn-sol:hover{ background:var(--sol-fuerte); }
+  .btn-rio{ background:var(--rio); color:var(--blanco); }
+  .btn-fantasma{ background:transparent; color:var(--selva); border:2px solid var(--selva); }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none !important; }
+  .pantalla{ text-align:center; padding:8px 4px 4px; }
+  .pantalla .icono-grande{ font-size:52px; line-height:1; margin-bottom:6px; }
+  .pantalla h2{ font-family:Georgia,serif; color:var(--selva); font-size:22px; margin:6px 0 8px; }
+  .pantalla p{ font-size:14.5px; line-height:1.55; color:var(--tierra); max-width:520px; margin:0 auto 14px; }
+  .lista-ejes{ text-align:left; display:grid; gap:8px; margin:16px auto 20px; max-width:420px; }
+  .lista-ejes div{ display:flex; align-items:center; gap:10px; font-size:14px; }
+  .lista-ejes span.chip{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    background:var(--hoja-clara); font-size:15px; flex:0 0 auto; }
+  .estrellas{ font-size:34px; letter-spacing:6px; margin:6px 0 4px; }
+  .barras{ display:grid; gap:10px; margin:18px 0; text-align:left; }
+  .barra-fila{ font-size:13.5px; }
+  .barra-fila .etiqueta{ display:flex; justify-content:space-between; margin-bottom:4px; }
+  .barra-fondo{ background:#eee3c8; border-radius:8px; height:12px; overflow:hidden; }
+  .barra-rel{ height:100%; border-radius:8px; background:linear-gradient(90deg, var(--hoja), var(--rio)); }
+  .fila-botones{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
+  .campo-grupo{ text-align:left; max-width:360px; margin:0 auto 14px; }
+  .campo-grupo label{ display:block; font-size:13px; font-weight:700; color:var(--selva); margin-bottom:5px; }
+  .campo-input{ width:100%; padding:11px 13px; font-size:15px; border:2px solid #e6dcc3; border-radius:10px;
+    background:var(--arena); color:var(--tierra); font-family:inherit; }
+  .campo-input:focus{ outline:none; border-color:var(--rio); background:var(--blanco); }
+  .campo-error{ color:var(--achiote); font-size:12.5px; margin-top:-6px; margin-bottom:12px; display:none;
+    text-align:left; max-width:360px; margin-left:auto; margin-right:auto; }
+  .nota-intentos{ font-size:12.5px; color:#8a7859; margin-top:2px; }
+  .pie{ text-align:center; font-size:11.5px; color:#8a7859; margin-top:16px; }
+  @media (max-width:480px){ .titulo{ font-size:20px; } .pregunta{ font-size:17px; } }
+  .toast{ position:fixed; left:50%; top:18px; transform:translate(-50%,-140%); background:var(--selva); color:var(--blanco);
+    padding:12px 20px; border-radius:12px; box-shadow:var(--sombra); font-size:14px; font-weight:600; z-index:50;
+    transition: transform .35s ease; }
+  .toast.mostrar{ transform:translate(-50%,0); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="cabecera">
+    <div class="fila-top">
+      <div>
+        <div class="marca">Instituto Nueva Colombia · Puerto Asís, Putumayo</div>
+        <h1 class="titulo">🚣 Expedición del Río — Matemáticas</h1>
+        <div class="subtitulo">Ciclo VI (11°) · Práctica gamificada · Docente: Giovanny Andrés Moriano · Clase Classroom: bffleebq</div>
+      </div>
+      <div class="placar">
+        <span class="racha" id="racha-txt">Racha: 0</span>
+        <b id="puntaje-txt">0 pts</b>
+      </div>
+    </div>
+    <div class="rio-wrap">
+      <svg class="rio-svg" viewBox="0 0 700 74" id="rio-svg" preserveAspectRatio="none">
+        <path d="M10,40 C 120,10 180,65 340,38 S 560,10 690,40" fill="none" stroke="#2c7da0" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+        <path id="rio-recorrido" d="M10,40 C 120,10 180,65 340,38 S 560,10 690,40" fill="none" stroke="#e8a33d" stroke-width="10" stroke-linecap="round" stroke-dasharray="1000" stroke-dashoffset="1000"/>
+        <g id="marcas-estaciones"></g>
+        <text id="canoa" x="10" y="30" font-size="26">🛶</text>
+      </svg>
+      <div class="estaciones-labels" id="etiquetas-estaciones">
+        <span>🔢 Numérico</span><span>🔤 Variacional</span><span>📐 Espacial</span><span>📏 Métrico</span><span>🎲 Aleatorio</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="tarjeta" id="tarjeta"></main>
+
+  <div class="pie">Puedes descargar este archivo y usarlo sin conexión. Los resultados se exportan al finalizar.</div>
+</div>
+
+<div class="toast" id="toast">¡Estación superada! Río abajo 🚣</div>
+
+<!-- ================= BANCO DE PREGUNTAS (editable) ================= -->
+<!-- 8 preguntas por eje: en cada intento el juego elige 4 al azar y mezcla el orden
+     de las opciones, para que no siempre sean las mismas preguntas ni la misma letra. -->
+<script id="banco-preguntas" type="application/json">
+{
+  "ejes": [
+    {
+      "id": "numerico",
+      "nombre": "Pensamiento numérico",
+      "icono": "🔢",
+      "preguntas": [
+        {
+          "texto": "Si inviertes $1.000.000 a una tasa compuesta anual del 8%, el monto después de 1 año es:",
+          "opciones": [
+            "$1.080.000",
+            "$1.008.000",
+            "$1.800.000",
+            "$1.100.000"
+          ],
+          "correcta": 0,
+          "explicacion": "Monto = Capital×(1+tasa) = 1.000.000×1.08 = 1.080.000."
+        },
+        {
+          "texto": "log(100) = ?",
+          "opciones": [
+            "2",
+            "100",
+            "10",
+            "1"
+          ],
+          "correcta": 0,
+          "explicacion": "10² = 100, por lo tanto log(100) = 2."
+        },
+        {
+          "texto": "ln(e) = ?",
+          "opciones": [
+            "1",
+            "0",
+            "e",
+            "2.718"
+          ],
+          "correcta": 0,
+          "explicacion": "El logaritmo natural de e siempre es 1, por definición."
+        },
+        {
+          "texto": "5⁰ = ?",
+          "opciones": [
+            "1",
+            "0",
+            "5",
+            "Indefinido"
+          ],
+          "correcta": 0,
+          "explicacion": "Cualquier número distinto de cero elevado a la 0 es igual a 1."
+        },
+        {
+          "texto": "El valor presente de $1.210.000 recibido en 2 años a una tasa del 10% anual es aproximadamente:",
+          "opciones": [
+            "$1.000.000",
+            "$1.100.000",
+            "$1.210.000",
+            "$900.000"
+          ],
+          "correcta": 0,
+          "explicacion": "VP = 1.210.000 / (1.10)² = 1.210.000/1.21 = 1.000.000."
+        },
+        {
+          "texto": "(2³)² = ?",
+          "opciones": [
+            "64",
+            "32",
+            "16",
+            "512"
+          ],
+          "correcta": 0,
+          "explicacion": "2³=8, y 8²=64."
+        },
+        {
+          "texto": "Si una deuda de $500.000 genera un interés simple del 3% mensual durante 4 meses, el interés total es:",
+          "opciones": [
+            "$60.000",
+            "$15.000",
+            "$500.000",
+            "$45.000"
+          ],
+          "correcta": 0,
+          "explicacion": "Interés = 500.000×0.03×4 = 60.000."
+        },
+        {
+          "texto": "log₅ 25 = ?",
+          "opciones": [
+            "2",
+            "5",
+            "25",
+            "10"
+          ],
+          "correcta": 0,
+          "explicacion": "5² = 25, por lo tanto log₅25 = 2."
+        }
+      ]
+    },
+    {
+      "id": "variacional",
+      "nombre": "Pensamiento variacional",
+      "icono": "🔤",
+      "preguntas": [
+        {
+          "texto": "El límite de f(x) = 2x + 1 cuando x→3 es:",
+          "opciones": [
+            "7",
+            "6",
+            "3",
+            "1"
+          ],
+          "correcta": 0,
+          "explicacion": "Al sustituir directamente: 2(3)+1 = 7 (la función es continua)."
+        },
+        {
+          "texto": "La derivada de f(x) = x² es:",
+          "opciones": [
+            "2x",
+            "x",
+            "2",
+            "x²"
+          ],
+          "correcta": 0,
+          "explicacion": "Usando la regla de la potencia: la derivada de xⁿ es n·xⁿ⁻¹, entonces 2x."
+        },
+        {
+          "texto": "La derivada de una constante es:",
+          "opciones": [
+            "0",
+            "La misma constante",
+            "1",
+            "Indefinida"
+          ],
+          "correcta": 0,
+          "explicacion": "Una constante no cambia, así que su tasa de variación (derivada) es 0."
+        },
+        {
+          "texto": "La derivada de f(x) = 3x es:",
+          "opciones": [
+            "3",
+            "3x",
+            "x",
+            "0"
+          ],
+          "correcta": 0,
+          "explicacion": "La derivada de una función lineal mx es simplemente m: en este caso 3."
+        },
+        {
+          "texto": "El límite de f(x) = 1/x cuando x→∞ es:",
+          "opciones": [
+            "0",
+            "1",
+            "Infinito",
+            "Indefinido"
+          ],
+          "correcta": 0,
+          "explicacion": "A medida que x crece mucho, 1/x se acerca cada vez más a 0."
+        },
+        {
+          "texto": "La pendiente de la recta tangente a una curva en un punto se calcula con:",
+          "opciones": [
+            "La derivada",
+            "La integral",
+            "El límite del cociente inverso",
+            "El promedio"
+          ],
+          "correcta": 0,
+          "explicacion": "La derivada en un punto es precisamente la pendiente de la recta tangente allí."
+        },
+        {
+          "texto": "Una función racional tiene la forma:",
+          "opciones": [
+            "Un cociente de polinomios",
+            "Solo exponentes",
+            "Solo raíces",
+            "Un producto de constantes"
+          ],
+          "correcta": 0,
+          "explicacion": "Una función racional es una división entre dos polinomios."
+        },
+        {
+          "texto": "Si f(x) = x³, f'(x) es:",
+          "opciones": [
+            "3x²",
+            "x²",
+            "3x",
+            "x³"
+          ],
+          "correcta": 0,
+          "explicacion": "Aplicando la regla de la potencia: la derivada de x³ es 3x²."
+        }
+      ]
+    },
+    {
+      "id": "espacial",
+      "nombre": "Pensamiento espacial",
+      "icono": "📐",
+      "preguntas": [
+        {
+          "texto": "El volumen de una esfera de radio 3 cm es aproximadamente (V=4/3πr³, π≈3.14):",
+          "opciones": [
+            "113 cm³",
+            "28 cm³",
+            "36 cm³",
+            "90 cm³"
+          ],
+          "correcta": 0,
+          "explicacion": "V = 4/3 × 3.14 × 27 ≈ 113.04 cm³."
+        },
+        {
+          "texto": "El volumen de un cono con radio 3 cm y altura 6 cm (π≈3.14) es aproximadamente:",
+          "opciones": [
+            "56.5 cm³",
+            "113 cm³",
+            "18 cm³",
+            "169.6 cm³"
+          ],
+          "correcta": 0,
+          "explicacion": "V = 1/3 × π × r² × h = 1/3 × 3.14 × 9 × 6 ≈ 56.5 cm³."
+        },
+        {
+          "texto": "El área total de un cilindro con radio 2 cm y altura 5 cm (π≈3.14) es aproximadamente:",
+          "opciones": [
+            "87.9 cm²",
+            "62.8 cm²",
+            "25.1 cm²",
+            "43.9 cm²"
+          ],
+          "correcta": 0,
+          "explicacion": "Área total = 2πr(h+r) = 2×3.14×2×7 ≈ 87.92 cm²."
+        },
+        {
+          "texto": "Un sólido compuesto por un cilindro y un cono en su parte superior se llama:",
+          "opciones": [
+            "Cuerpo compuesto",
+            "Prisma",
+            "Poliedro regular",
+            "Esfera"
+          ],
+          "correcta": 0,
+          "explicacion": "Cuando un sólido combina dos o más figuras geométricas, se llama cuerpo compuesto."
+        },
+        {
+          "texto": "El volumen de una pirámide con área de base 12 cm² y altura 9 cm es:",
+          "opciones": [
+            "36 cm³",
+            "108 cm³",
+            "54 cm³",
+            "27 cm³"
+          ],
+          "correcta": 0,
+          "explicacion": "V = 1/3 × área de la base × altura = 1/3 × 12 × 9 = 36 cm³."
+        },
+        {
+          "texto": "Un poliedro con todas sus caras iguales y regulares se llama:",
+          "opciones": [
+            "Poliedro regular",
+            "Prisma",
+            "Cuerpo redondo",
+            "Cono"
+          ],
+          "correcta": 0,
+          "explicacion": "Los poliedros regulares (como el cubo) tienen todas sus caras iguales."
+        },
+        {
+          "texto": "El área de la base de un cilindro con radio 4 cm (π≈3.14) es:",
+          "opciones": [
+            "50.24 cm²",
+            "12.56 cm²",
+            "25.12 cm²",
+            "100.48 cm²"
+          ],
+          "correcta": 0,
+          "explicacion": "Área = π×r² = 3.14×16 = 50.24 cm²."
+        },
+        {
+          "texto": "Si se duplica el radio de una esfera, su volumen se multiplica por:",
+          "opciones": [
+            "8",
+            "2",
+            "4",
+            "16"
+          ],
+          "correcta": 0,
+          "explicacion": "El volumen depende del cubo del radio: al duplicar r, el volumen se multiplica por 2³=8."
+        }
+      ]
+    },
+    {
+      "id": "metrico",
+      "nombre": "Pensamiento métrico",
+      "icono": "📏",
+      "preguntas": [
+        {
+          "texto": "1 hectárea equivale a:",
+          "opciones": [
+            "10.000 m²",
+            "1.000 m²",
+            "100.000 m²",
+            "100 m²"
+          ],
+          "correcta": 0,
+          "explicacion": "Una hectárea equivale exactamente a 10.000 metros cuadrados."
+        },
+        {
+          "texto": "Si un terreno productivo mide 2 hectáreas, su área en m² es:",
+          "opciones": [
+            "20.000 m²",
+            "2.000 m²",
+            "200.000 m²",
+            "20 m²"
+          ],
+          "correcta": 0,
+          "explicacion": "Cada hectárea son 10.000 m²: 2 × 10.000 = 20.000 m²."
+        },
+        {
+          "texto": "1 tonelada equivale a:",
+          "opciones": [
+            "1.000 kg",
+            "100 kg",
+            "10.000 kg",
+            "10 kg"
+          ],
+          "correcta": 0,
+          "explicacion": "Una tonelada métrica equivale a 1.000 kilogramos."
+        },
+        {
+          "texto": "Un tanque cilíndrico de radio 1 m y altura 2 m tiene un volumen aproximado de (π≈3.14):",
+          "opciones": [
+            "6.28 m³",
+            "3.14 m³",
+            "12.56 m³",
+            "2 m³"
+          ],
+          "correcta": 0,
+          "explicacion": "V = π×r²×h = 3.14×1×2 = 6.28 m³."
+        },
+        {
+          "texto": "Si 1 galón equivale aproximadamente a 3.785 litros, 5 galones equivalen aproximadamente a:",
+          "opciones": [
+            "18.9 litros",
+            "15 litros",
+            "3.785 litros",
+            "20 litros"
+          ],
+          "correcta": 0,
+          "explicacion": "5 × 3.785 ≈ 18.9 litros."
+        },
+        {
+          "texto": "La densidad se calcula como:",
+          "opciones": [
+            "Masa/volumen",
+            "Volumen/masa",
+            "Masa×volumen",
+            "Masa+volumen"
+          ],
+          "correcta": 0,
+          "explicacion": "La densidad relaciona cuánta masa hay por unidad de volumen."
+        },
+        {
+          "texto": "Si un contenedor tiene 500 litros y se llena al 60%, contiene:",
+          "opciones": [
+            "300 litros",
+            "60 litros",
+            "200 litros",
+            "500 litros"
+          ],
+          "correcta": 0,
+          "explicacion": "60% de 500 es 0.60×500 = 300 litros."
+        },
+        {
+          "texto": "1 km² equivale a:",
+          "opciones": [
+            "1.000.000 m²",
+            "1.000 m²",
+            "100.000 m²",
+            "10.000 m²"
+          ],
+          "correcta": 0,
+          "explicacion": "Un kilómetro cuadrado equivale a 1.000 m × 1.000 m = 1.000.000 m²."
+        }
+      ]
+    },
+    {
+      "id": "aleatorio",
+      "nombre": "Pensamiento aleatorio",
+      "icono": "🎲",
+      "preguntas": [
+        {
+          "texto": "Una muestra representativa busca:",
+          "opciones": [
+            "Reflejar las características de la población",
+            "Ser siempre el 100% de la población",
+            "Excluir datos atípicos",
+            "Ser tomada sin ningún criterio"
+          ],
+          "correcta": 0,
+          "explicacion": "Una buena muestra debe parecerse a la población de la que proviene."
+        },
+        {
+          "texto": "La probabilidad condicional P(A|B) se refiere a:",
+          "opciones": [
+            "La probabilidad de A dado que ocurrió B",
+            "La probabilidad de A y B juntos",
+            "La probabilidad de A o B",
+            "La probabilidad de que B nunca ocurra"
+          ],
+          "correcta": 0,
+          "explicacion": "P(A|B) mide qué tan probable es A, sabiendo que B ya ocurrió."
+        },
+        {
+          "texto": "En una distribución binomial, cada ensayo tiene:",
+          "opciones": [
+            "Dos resultados posibles",
+            "Tres resultados posibles",
+            "Resultados continuos",
+            "Resultados negativos"
+          ],
+          "correcta": 0,
+          "explicacion": "La distribución binomial modela eventos de tipo éxito/fracaso."
+        },
+        {
+          "texto": "Si P(A)=0.3 y P(B)=0.4 y son independientes, P(A y B) es:",
+          "opciones": [
+            "0.12",
+            "0.7",
+            "0.1",
+            "1.2"
+          ],
+          "correcta": 0,
+          "explicacion": "Para eventos independientes, se multiplican: 0.3×0.4 = 0.12."
+        },
+        {
+          "texto": "El margen de error en una encuesta indica:",
+          "opciones": [
+            "La incertidumbre de la estimación",
+            "El número de encuestados",
+            "El promedio de respuestas",
+            "La moda de los datos"
+          ],
+          "correcta": 0,
+          "explicacion": "El margen de error muestra qué tan precisa es la estimación obtenida de la muestra."
+        },
+        {
+          "texto": "Si el 70% de una población está a favor de una propuesta, la probabilidad de elegir al azar a alguien en contra es:",
+          "opciones": [
+            "30%",
+            "70%",
+            "50%",
+            "100%"
+          ],
+          "correcta": 0,
+          "explicacion": "Si 70% está a favor, el 100%-70%=30% restante está en contra."
+        },
+        {
+          "texto": "Un estimador insesgado es aquel que:",
+          "opciones": [
+            "En promedio coincide con el valor real del parámetro",
+            "Siempre da el mismo resultado",
+            "Ignora los datos atípicos",
+            "Solo aplica a muestras grandes"
+          ],
+          "correcta": 0,
+          "explicacion": "Un estimador insesgado no se desvía sistemáticamente del valor verdadero."
+        },
+        {
+          "texto": "La inferencia estadística permite:",
+          "opciones": [
+            "Sacar conclusiones sobre una población a partir de una muestra",
+            "Calcular solo la moda",
+            "Graficar únicamente datos categóricos",
+            "Eliminar la variabilidad de los datos"
+          ],
+          "correcta": 0,
+          "explicacion": "Con base en una muestra, la inferencia estadística generaliza conclusiones a toda la población."
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- CONFIGURACIÓN EDITABLE ----------
+  var DOCENTE_NOMBRE = "Giovanny Andrés Moriano";
+  var DOCENTE_CORREO = "andresmoriano812@gmail.com";
+  var DOCENTE_WHATSAPP = "573000000000"; // cambia por el número real, sin '+' ni espacios
+  var CODIGO_CLASE = "bffleebq";
+  var CICLO_ROMANO = "VI";
+  var CICLO_ARABIGO = "6";
+  var PREGUNTAS_POR_EJE_EN_INTENTO = 4; // de las 8 disponibles en el banco
+  var MAX_INTENTOS = 2;
+
+  // --- Registro automático en una hoja de cálculo (Google Sheets), OPCIONAL ---
+  // Ver instrucciones completas en la respuesta del chat. Resumen:
+  //  1) En tu Google Sheet: Extensiones > Apps Script, pega el código que te dio Claude.
+  //  2) Implementar > Nueva implementación > Aplicación web > Ejecutar como "Yo",
+  //     acceso "Cualquier usuario". Copia la URL que termina en /exec.
+  //  3) Pega esa URL abajo. Puede ser la misma para los 4 ciclos (una sola hoja para todos)
+  //     o una distinta por ciclo, según prefieras.
+  var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYCa9qf3T-8eAsjR4Bi8g0KzGcfLQfsv9GjIb8Muo9Vx9NXca0ZbixaLg284Xf3TEKwg/exec"; // ej: "https://script.google.com/macros/s/AKfycb.../exec"
+
+  // ---------- ALMACENAMIENTO LOCAL (control de 2 intentos por identificación) ----------
+  // Nota: este control queda guardado en el navegador del dispositivo donde se juega.
+  // Si el estudiante siempre usa el mismo celular, el límite de 2 intentos se respeta
+  // aunque cierre la página o se quede sin internet. Si prueba desde otro dispositivo
+  // o borra los datos del navegador, este control local no lo detecta: para una
+  // verificación cruzada, revisa la columna "Identificación" en la hoja del docente
+  // (si ya configuraste el registro automático) o en los correos/CSV recibidos.
+  var memoriaRespaldo = {};
+  function storageOK(){
+    try { var k="__t"; localStorage.setItem(k,"1"); localStorage.removeItem(k); return true; }
+    catch(e){ return false; }
+  }
+  var HAY_STORAGE = storageOK();
+  function claveIntentos(id){ return "enc_ciclo" + CICLO_ARABIGO + "_intentos_" + id; }
+  function leerIntentos(id){
+    var clave = claveIntentos(id);
+    var crudo = HAY_STORAGE ? localStorage.getItem(clave) : memoriaRespaldo[clave];
+    if (!crudo) return { intentos: 0, mejor: null };
+    try { return JSON.parse(crudo); } catch(e){ return { intentos: 0, mejor: null }; }
+  }
+  function guardarIntentos(id, registro){
+    var clave = claveIntentos(id);
+    var texto = JSON.stringify(registro);
+    if (HAY_STORAGE) localStorage.setItem(clave, texto); else memoriaRespaldo[clave] = texto;
+  }
+
+  var datos = JSON.parse(document.getElementById("banco-preguntas").textContent);
+  var ejes = datos.ejes; // cada eje trae 8 preguntas en el banco
+
+  var estado = {
+    alumno: { nombre: "", id: "", edad: "" },
+    preguntas: [], // set de la ronda actual (elegido al azar, con opciones mezcladas)
+    indice: 0, puntaje: 0, racha: 0, respondida: false,
+    respuestas: [], porEje: {}
+  };
+
+  var tarjeta = document.getElementById("tarjeta");
+  var puntajeTxt = document.getElementById("puntaje-txt");
+  var rachaTxt = document.getElementById("racha-txt");
+  var toast = document.getElementById("toast");
+
+  // ---------- UTILIDADES ----------
+  function mezclar(array){
+    var copia = array.slice();
+    for (var i = copia.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = copia[i]; copia[i] = copia[j]; copia[j] = tmp;
+    }
+    return copia;
+  }
+
+  function prepararRonda(){
+    estado.preguntas = [];
+    estado.porEje = {};
+    ejes.forEach(function(eje){
+      var elegidas = mezclar(eje.preguntas).slice(0, PREGUNTAS_POR_EJE_EN_INTENTO);
+      elegidas.forEach(function(p){
+        var indicesOriginales = p.opciones.map(function(_, i){ return i; });
+        var ordenMezclado = mezclar(indicesOriginales);
+        var opcionesMezcladas = ordenMezclado.map(function(i){ return p.opciones[i]; });
+        var nuevaCorrecta = ordenMezclado.indexOf(p.correcta);
+        estado.preguntas.push({
+          eje: eje.id, ejeNombre: eje.nombre, icono: eje.icono,
+          texto: p.texto, opciones: opcionesMezcladas, correcta: nuevaCorrecta, explicacion: p.explicacion
+        });
+      });
+      estado.porEje[eje.id] = { correctas: 0, total: elegidas.length, nombre: eje.nombre };
+    });
+  }
+
+  // ---------- RÍO / PROGRESO SVG ----------
+  var recorrido = document.getElementById("rio-recorrido");
+  var totalLength = recorrido.getTotalLength();
+  recorrido.style.strokeDasharray = totalLength;
+  recorrido.style.strokeDashoffset = totalLength;
+
+  function pintarEstaciones(){
+    var g = document.getElementById("marcas-estaciones");
+    g.innerHTML = "";
+    var n = ejes.length;
+    for (var i=0;i<n;i++){
+      var pt = recorrido.getPointAtLength( (i/(n-1)) * totalLength );
+      var circ = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      circ.setAttribute("cx", pt.x); circ.setAttribute("cy", pt.y);
+      circ.setAttribute("r", 7); circ.setAttribute("fill", "#fffdf7");
+      circ.setAttribute("stroke", "#123528"); circ.setAttribute("stroke-width","2.5");
+      circ.setAttribute("id","estacion-"+i);
+      g.appendChild(circ);
+    }
+  }
+  pintarEstaciones();
+
+  function actualizarRio(){
+    var totalPreg = estado.preguntas.length || 1;
+    var avance = Math.min(estado.indice / totalPreg, 1);
+    var offset = totalLength * (1 - avance);
+    recorrido.style.strokeDashoffset = offset;
+    var pt = recorrido.getPointAtLength(totalLength * avance);
+    var canoa = document.getElementById("canoa");
+    canoa.setAttribute("x", pt.x - 13);
+    canoa.setAttribute("y", pt.y + 8);
+    var n = ejes.length;
+    for (var i=0;i<n;i++){
+      var c = document.getElementById("estacion-"+i);
+      var umbral = (i/(n-1));
+      c.setAttribute("fill", avance >= umbral ? "#e8a33d" : "#fffdf7");
+    }
+    var labels = document.querySelectorAll("#etiquetas-estaciones span");
+    var ejeActualIdx = ejes.findIndex(function(e){ return e.id === (estado.preguntas[estado.indice] ? estado.preguntas[estado.indice].eje : null); });
+    labels.forEach(function(l,idx){ l.classList.toggle("activa", idx===ejeActualIdx); });
+  }
+
+  function mostrarToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("mostrar");
+    setTimeout(function(){ toast.classList.remove("mostrar"); }, 1900);
+  }
+
+  // ---------- PANTALLAS ----------
+  function pantallaDatos(){
+    tarjeta.innerHTML =
+      '<div class="pantalla">'+
+        '<div class="icono-grande">🧭</div>'+
+        '<h2>Antes de zarpar...</h2>'+
+        '<p>Escribe tus datos para que el docente pueda ver tu avance en el registro del curso. Recuerda: solo tienes <b>'+MAX_INTENTOS+' intentos</b> para este cuestionario.</p>'+
+        '<div class="campo-grupo"><label for="in-nombre">Nombre completo</label>'+
+          '<input class="campo-input" id="in-nombre" type="text" autocomplete="name" placeholder="Ej: Juan Camilo Rosero" value="'+ (estado.alumno.nombre||"").replace(/"/g,"&quot;") +'"></div>'+
+        '<div class="campo-grupo"><label for="in-id">Número de identificación</label>'+
+          '<input class="campo-input" id="in-id" type="text" inputmode="numeric" placeholder="Ej: 1023456789" value="'+ (estado.alumno.id||"") +'"></div>'+
+        '<div class="campo-grupo"><label for="in-edad">Edad</label>'+
+          '<input class="campo-input" id="in-edad" type="number" min="9" max="25" placeholder="Ej: 13" value="'+ (estado.alumno.edad||"") +'"></div>'+
+        '<div class="campo-error" id="error-datos">Completa nombre completo, número de identificación y una edad válida (entre 9 y 25 años).</div>'+
+        '<button class="btn btn-sol" id="btn-continuar">Continuar 🚣</button>'+
+        (HAY_STORAGE ? '' : '<div class="nota-intentos">⚠️ Tu navegador no permite guardar el conteo de intentos en este momento (por ejemplo, en modo incógnito). El límite de '+MAX_INTENTOS+' intentos podría no recordarse si cierras esta pestaña.</div>')+
+      '</div>';
+
+    document.getElementById("btn-continuar").addEventListener("click", function(){
+      var nombre = document.getElementById("in-nombre").value.trim();
+      var idNumero = document.getElementById("in-id").value.trim();
+      var edad = parseInt(document.getElementById("in-edad").value, 10);
+      var error = document.getElementById("error-datos");
+      if (!nombre || nombre.split(" ").filter(Boolean).length < 2 || !idNumero || idNumero.length < 5 || !edad || edad < 9 || edad > 25){
+        error.style.display = "block";
+        return;
+      }
+      error.style.display = "none";
+
+      var registro = leerIntentos(idNumero);
+      if (registro.intentos >= MAX_INTENTOS){
+        estado.alumno = { nombre: nombre, id: idNumero, edad: edad };
+        pantallaBloqueo(registro);
+        return;
+      }
+
+      estado.alumno = { nombre: nombre, id: idNumero, edad: edad };
+      prepararRonda();
+      pantallaInicio();
+    });
+  }
+
+  function pantallaBloqueo(registro){
+    var mejorTxt = registro.mejor
+      ? ("Tu mejor puntaje registrado fue <b>"+registro.mejor.puntaje+" pts</b> ("+registro.mejor.porcentaje+"% de aciertos), el "+registro.mejor.fecha+".")
+      : "No encontramos el detalle de tus intentos anteriores en este dispositivo.";
+    tarjeta.innerHTML =
+      '<div class="pantalla">'+
+        '<div class="icono-grande">🚫🛶</div>'+
+        '<h2>Ya usaste tus '+MAX_INTENTOS+' intentos</h2>'+
+        '<p>Este cuestionario permite máximo '+MAX_INTENTOS+' intentos por estudiante. '+mejorTxt+' Si crees que esto es un error, habla con tu docente.</p>'+
+        '<button class="btn btn-fantasma" id="btn-volver">Volver a escribir mis datos</button>'+
+      '</div>';
+    document.getElementById("btn-volver").addEventListener("click", pantallaDatos);
+  }
+
+  function pantallaInicio(){
+    var listaHtml = ejes.map(function(e){
+      return '<div><span class="chip">'+e.icono+'</span> '+e.nombre+' <span style="color:#8a7859;">· '+PREGUNTAS_POR_EJE_EN_INTENTO+' preguntas</span></div>';
+    }).join("");
+    var primerNombre = (estado.alumno.nombre || "").split(" ")[0] || "";
+    var registroPrevio = leerIntentos(estado.alumno.id);
+
+    tarjeta.innerHTML =
+      '<div class="pantalla">'+
+        '<div class="icono-grande">🌿🛶🌊</div>'+
+        '<h2>'+ (primerNombre ? ("¡Hola, "+primerNombre+"! ") : "") +'Bienvenido a la Expedición del Río</h2>'+
+        '<p>Vas a navegar el río Putumayo resolviendo retos de Matemáticas. Cada estación representa un pensamiento matemático distinto. No hay tiempo límite: esto es para practicar y aprender, así que tómate tu tiempo y lee la explicación después de cada respuesta.</p>'+
+        '<div class="lista-ejes">'+listaHtml+'</div>'+
+        '<p class="nota-intentos">Intentos usados: '+registroPrevio.intentos+' de '+MAX_INTENTOS+'.</p>'+
+        '<button class="btn btn-sol" id="btn-empezar">🚣 Empezar la expedición</button>'+
+      '</div>';
+    document.getElementById("btn-empezar").addEventListener("click", function(){
+      estado.indice = 0; renderPregunta();
+    });
+  }
+
+  function renderPregunta(){
+    if (estado.indice >= estado.preguntas.length){ pantallaResultados(); return; }
+    estado.respondida = false;
+    var p = estado.preguntas[estado.indice];
+    var mismasDelEje = estado.preguntas.filter(function(q){ return q.eje === p.eje; });
+    var numEnEje = mismasDelEje.indexOf(p) + 1;
+
+    var letras = ["A","B","C","D"];
+    var opcionesHtml = p.opciones.map(function(op, i){
+      return '<button class="opcion" data-i="'+i+'"><span class="letra">'+letras[i]+'</span><span>'+op+'</span></button>';
+    }).join("");
+
+    tarjeta.innerHTML =
+      '<div class="estacion-tag">'+p.icono+' '+p.ejeNombre+' · reto '+numEnEje+' de '+mismasDelEje.length+'</div>'+
+      '<p class="pregunta">'+p.texto+'</p>'+
+      '<div class="opciones">'+opcionesHtml+'</div>'+
+      '<div class="retro" id="retro"></div>'+
+      '<div class="acciones" id="acciones"></div>';
+
+    var botones = tarjeta.querySelectorAll(".opcion");
+    botones.forEach(function(b){
+      b.addEventListener("click", function(){ responder(parseInt(b.getAttribute("data-i"),10), botones); });
+    });
+
+    actualizarRio();
+  }
+
+  function responder(i, botones){
+    if (estado.respondida) return;
+    estado.respondida = true;
+    var p = estado.preguntas[estado.indice];
+    var esCorrecta = (i === p.correcta);
+
+    botones.forEach(function(b, idx){
+      b.disabled = true;
+      if (idx === p.correcta) b.classList.add("correcta");
+      else if (idx === i) b.classList.add("incorrecta");
+    });
+
+    var puntos = 0;
+    if (esCorrecta){
+      estado.racha += 1;
+      puntos = 10 + Math.min(estado.racha - 1, 5) * 2;
+      estado.puntaje += puntos;
+      estado.porEje[p.eje].correctas += 1;
+    } else {
+      estado.racha = 0;
+    }
+    puntajeTxt.textContent = estado.puntaje + " pts";
+    rachaTxt.textContent = "Racha: " + estado.racha;
+
+    estado.respuestas.push({ texto: p.texto, ejeNombre: p.ejeNombre, seleccion: p.opciones[i], correctaTexto: p.opciones[p.correcta], esCorrecta: esCorrecta });
+
+    var retro = document.getElementById("retro");
+    retro.className = "retro " + (esCorrecta ? "bien" : "mal");
+    retro.innerHTML = "<strong>" + (esCorrecta ? ("¡Muy bien! +" + puntos + " puntos") : "Casi. La respuesta correcta era: " + p.opciones[p.correcta]) + "</strong>" + p.explicacion;
+
+    var acciones = document.getElementById("acciones");
+    var esUltimaDeEje = (estado.indice+1 < estado.preguntas.length) ? (estado.preguntas[estado.indice+1].eje !== p.eje) : true;
+    var textoBtn = (estado.indice+1 >= estado.preguntas.length) ? "Ver resultados 🏁" : (esUltimaDeEje ? "Siguiente estación 🚣" : "Siguiente reto →");
+    acciones.innerHTML = '<button class="btn btn-rio" id="btn-siguiente">'+textoBtn+'</button>';
+    document.getElementById("btn-siguiente").addEventListener("click", function(){
+      var cambiaEstacion = esUltimaDeEje && (estado.indice+1 < estado.preguntas.length);
+      estado.indice += 1;
+      if (cambiaEstacion) mostrarToast("¡Estación superada! Sigues río abajo 🚣");
+      renderPregunta();
+    });
+  }
+
+  function pantallaResultados(){
+    var totalPreg = estado.preguntas.length;
+    var totalCorrectas = estado.respuestas.filter(function(r){ return r.esCorrecta; }).length;
+    var porcentaje = Math.round((totalCorrectas/totalPreg)*100);
+    var estrellas = porcentaje >= 85 ? "★★★" : porcentaje >= 60 ? "★★☆" : "★☆☆";
+
+    var registro = leerIntentos(estado.alumno.id);
+    registro.intentos += 1;
+    if (!registro.mejor || estado.puntaje > registro.mejor.puntaje){
+      registro.mejor = { puntaje: estado.puntaje, porcentaje: porcentaje, fecha: new Date().toLocaleDateString() };
+    }
+    guardarIntentos(estado.alumno.id, registro);
+    var intentosRestantes = Math.max(0, MAX_INTENTOS - registro.intentos);
+
+    var barrasHtml = Object.keys(estado.porEje).map(function(id){
+      var e = estado.porEje[id];
+      var pct = Math.round((e.correctas/e.total)*100);
+      return '<div class="barra-fila"><div class="etiqueta"><span>'+e.nombre+'</span><span>'+e.correctas+'/'+e.total+'</span></div>'+
+             '<div class="barra-fondo"><div class="barra-rel" style="width:'+pct+'%;"></div></div></div>';
+    }).join("");
+
+    tarjeta.innerHTML =
+      '<div class="pantalla">'+
+        '<div class="icono-grande">🏁</div>'+
+        '<h2>¡Llegaste a Puerto Leguízamo!</h2>'+
+        '<div class="estrellas">'+estrellas+'</div>'+
+        '<p>Respondiste correctamente '+totalCorrectas+' de '+totalPreg+' retos ('+porcentaje+'%) y sumaste <b>'+estado.puntaje+' puntos</b>. Aquí ves cómo te fue en cada pensamiento matemático:</p>'+
+        '<div class="barras">'+barrasHtml+'</div>'+
+        '<p class="nota-intentos">Intentos usados: '+registro.intentos+' de '+MAX_INTENTOS+ (intentosRestantes>0 ? (" · Te queda "+intentosRestantes+" intento.") : " · Ya no tienes más intentos disponibles.") +'</p>'+
+        '<div class="fila-botones">'+
+          '<button class="btn btn-sol" id="btn-csv">⬇️ Descargar resultados (CSV)</button>'+
+          (registroConfigurado()
+            ? '<button class="btn btn-rio" id="btn-registro">📊 Registrar en la hoja del docente</button>'
+            : '<button class="btn btn-fantasma" id="btn-registro" disabled title="El docente aún no configuró el registro automático">📊 Registro automático (sin configurar)</button>')+
+          '<button class="btn btn-rio" id="btn-wsp">📲 Enviar por WhatsApp</button>'+
+          '<button class="btn btn-rio" id="btn-mail">✉️ Enviar al docente</button>'+
+          (intentosRestantes > 0 ? '<button class="btn btn-fantasma" id="btn-reintentar">🔁 Intentar de nuevo ('+intentosRestantes+' intento restante)</button>' : '')+
+        '</div>'+
+      '</div>';
+
+    document.getElementById("btn-csv").addEventListener("click", descargarCSV);
+    document.getElementById("btn-wsp").addEventListener("click", enviarWhatsApp);
+    document.getElementById("btn-mail").addEventListener("click", enviarCorreo);
+    var btnReintentar = document.getElementById("btn-reintentar");
+    if (btnReintentar) btnReintentar.addEventListener("click", reiniciar);
+    var btnRegistro = document.getElementById("btn-registro");
+    if (btnRegistro && registroConfigurado()) btnRegistro.addEventListener("click", enviarRegistro);
+  }
+
+  function resumenTexto(){
+    var totalPreg = estado.preguntas.length;
+    var totalCorrectas = estado.respuestas.filter(function(r){ return r.esCorrecta; }).length;
+    var porcentaje = Math.round((totalCorrectas/totalPreg)*100);
+    var lineas = Object.keys(estado.porEje).map(function(id){
+      var e = estado.porEje[id];
+      return "- " + e.nombre + ": " + e.correctas + "/" + e.total;
+    });
+    return "Resultado Expedición del Río - Matemáticas Ciclo "+CICLO_ROMANO+"\n" +
+      "Instituto Nueva Colombia - Docente: " + DOCENTE_NOMBRE + " (Classroom: " + CODIGO_CLASE + ")\n" +
+      "Estudiante: " + estado.alumno.nombre + " | ID: " + estado.alumno.id + " | Edad: " + estado.alumno.edad + "\n" +
+      "Puntaje: " + estado.puntaje + " pts | Aciertos: " + totalCorrectas + "/" + totalPreg + " (" + porcentaje + "%)\n" +
+      lineas.join("\n");
+  }
+
+  function descargarCSV(){
+    var filas = [["Estudiante","Identificación","Edad","Ciclo","Pregunta","Eje","Respuesta seleccionada","Respuesta correcta","¿Correcta?"]];
+    estado.respuestas.forEach(function(r){
+      filas.push([estado.alumno.nombre, estado.alumno.id, estado.alumno.edad, CICLO_ROMANO, r.texto, r.ejeNombre, r.seleccion, r.correctaTexto, r.esCorrecta ? "Sí" : "No"]);
+    });
+    var csv = filas.map(function(fila){
+      return fila.map(function(campo){ return '"' + String(campo).replace(/"/g,'""') + '"'; }).join(",");
+    }).join("\n");
+    var blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    var nombreArchivo = (estado.alumno.nombre || "estudiante").trim().replace(/\s+/g,"_");
+    a.download = "resultados_" + nombreArchivo + "_ciclo6.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function registroConfigurado(){ return !!APPS_SCRIPT_URL; }
+
+  function enviarRegistro(){
+    if (!registroConfigurado()){
+      alert("El registro automático aún no está configurado. Mientras tanto usa WhatsApp, correo o descarga el CSV.");
+      return;
+    }
+    var totalPreg = estado.preguntas.length;
+    var totalCorrectas = estado.respuestas.filter(function(r){ return r.esCorrecta; }).length;
+    var porcentaje = Math.round((totalCorrectas/totalPreg)*100);
+    var detalle = Object.keys(estado.porEje).map(function(id){
+      var e = estado.porEje[id];
+      return e.nombre + ": " + e.correctas + "/" + e.total;
+    }).join(" | ");
+
+    var boton = document.getElementById("btn-registro");
+    if (boton){ boton.disabled = true; boton.textContent = "Enviando..."; }
+
+    // No usamos fetch (falla en algunos navegadores al abrir el juego como archivo
+    // local) ni un formulario POST (Apps Script lo convierte a GET en su redirección
+    // interna y se pierden los datos). En cambio, cargamos directamente una URL tipo
+    // GET dentro de un iframe oculto: no hay redirección que pierda datos, porque en
+    // un GET los datos van en la propia URL. El estudiante no ve ni puede tocar nada.
+    function param(nombre, valor){
+      return "&" + encodeURIComponent(nombre) + "=" + encodeURIComponent(valor);
+    }
+    var url = APPS_SCRIPT_URL + "?accion=registrar"
+      + param("nombre", estado.alumno.nombre)
+      + param("identificacion", estado.alumno.id)
+      + param("edad", estado.alumno.edad)
+      + param("ciclo", CICLO_ROMANO)
+      + param("puntaje", estado.puntaje)
+      + param("aciertos", totalCorrectas)
+      + param("total", totalPreg)
+      + param("porcentaje", porcentaje + "%")
+      + param("detalle", detalle);
+
+    var NOMBRE_IFRAME = "iframe-registro-docente";
+    var iframe = document.getElementById(NOMBRE_IFRAME);
+    if (!iframe){
+      iframe = document.createElement("iframe");
+      iframe.id = NOMBRE_IFRAME;
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+    }
+    iframe.src = url;
+
+    setTimeout(function(){ marcarRegistroEnviado(true); }, 1200);
+  }
+
+  function marcarRegistroEnviado(ok){
+    var boton = document.getElementById("btn-registro");
+    if (!boton) return;
+    boton.textContent = ok ? "✅ Enviado al registro" : "⚠️ No se pudo enviar (revisa tu conexión)";
+    boton.disabled = ok;
+  }
+
+  function enviarWhatsApp(){
+    var texto = encodeURIComponent(resumenTexto());
+    window.open("https://wa.me/" + DOCENTE_WHATSAPP + "?text=" + texto, "_blank");
+  }
+
+  function enviarCorreo(){
+    var asunto = encodeURIComponent("Resultados Ciclo " + CICLO_ROMANO + " - Matemáticas");
+    var cuerpo = encodeURIComponent(resumenTexto());
+    window.location.href = "mailto:" + DOCENTE_CORREO + "?subject=" + asunto + "&body=" + cuerpo;
+  }
+
+  function reiniciar(){
+    var registro = leerIntentos(estado.alumno.id);
+    if (registro.intentos >= MAX_INTENTOS){ pantallaBloqueo(registro); return; }
+    estado.indice = 0; estado.puntaje = 0; estado.racha = 0; estado.respondida = false;
+    estado.respuestas = [];
+    prepararRonda();
+    puntajeTxt.textContent = "0 pts"; rachaTxt.textContent = "Racha: 0";
+    pantallaInicio();
+    actualizarRio();
+  }
+
+  // ---------- ARRANQUE ----------
+  pantallaDatos();
+  window.addEventListener("resize", actualizarRio);
+})();
+</script>
+
+</body>
+</html>
